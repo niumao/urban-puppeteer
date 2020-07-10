@@ -1,0 +1,32 @@
+{
+  "name": "urban-puppeteer",
+  "version": "1.0.0",
+  "dependencies": {
+    "async-await-error-handling": "^0.5.2",
+    "chai": "^4.1.2",
+    "chalk": "^2.4.0",
+    "mocha": "^5.1.0",
+    "ora": "^2.0.0",
+    "puppeteer": "^1.3.0"
+  },
+  "description": "基于 puppeteer 的中国行政区域抓取爬虫(省市区)",
+  "scripts": {
+    "start": "node index.js",
+    "format": "node format.js",
+    "test": "npx mocha test/index.js"
+  },
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/niumao/urban-puppeteer.git"
+  },
+  "author": "niumao",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/niumao/urban-puppeteer/issues"
+  },
+  "homepage": "https://github.com/niumao/urban-puppeteer#readme",
+  "keywords": [
+    "spider"
+  ]
+}

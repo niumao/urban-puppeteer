@@ -5,6 +5,10 @@
 * 国家统计局：[统计用区划代码和城乡划分代码](http://www.stats.gov.cn/tjsj/tjbz/tjyqhdmhcxhfdm/2016/index.html)
 * 国家民政部：[中华人民共和国行政区划代码](http://www.mca.gov.cn/article/sj/tjbz/a/)
 
+## 提示
+第一个方法生成省市区附带行政码
+第二个格式化生成省市区不带行政码
+
 ## 数据更新
 ```
 npm i

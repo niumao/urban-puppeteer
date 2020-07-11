@@ -8,17 +8,14 @@ const spinner = ora({ color: 'blue' });
 
 const spiderUrl = "http://www.mca.gov.cn/article/sj/xzqh/2020/2020/202003301019.html";
 
-// 省市区
 
 (async () => {
-    spinner.start(chalk.green('开始抓取数据...'));
+    spinner.start(chalk.green('开始抓取省数据...'));
 
     const browser = await puppeteer.launch({headless:true, timeout: 3000});
     const page = await browser.newPage();
 
     await page.goto(spiderUrl)
-
-    spinner.text = chalk.green(`计算地址：${spiderUrl}`);
 
     let urbanArr = await page.evaluate(() => {
         urbanList = [...document.querySelectorAll('tbody tr')];
@@ -29,58 +26,75 @@ const spiderUrl = "http://www.mca.gov.cn/article/sj/xzqh/2020/2020/202003301019.
         formatList = formatList.slice(3, formatList.length - 9);
         return formatList;
     });
-    let urbanFormatArr = [];
-    let provice = {};
+    // [{code:, name:}]
+    let provinces = [];
+    // {p_code:[code:, name:]}
     let cities = {};
+    // {c_code:[code:, name:]}
+    let district = {};
+    let curCities = [];
+    let curDistrict = [];
     let isSpecial = false;
-    let proviceFlag = "99", cityFlag = "99", countyFlag = "99"; 
+    let provinceFlag = "99", cityFlag = "9999"; 
     urbanArr.forEach(el => {
         let curSel = el.split('\t');
         let code = curSel[0].trim()
         let name = curSel[1].trim()
-        if(proviceFlag != code.substr(0,2)){
-            if(Object.keys(provice).length != 0){
-                provice.cities.push(cities)
-                urbanFormatArr.push( provice)
-                provice = {"code": code, "name": name, "cities": []};
-                cities = {};
-                isSpecial = false;
-            }else{
-                provice = {"code": code, "name": name, "cities": []};
-            }
-            proviceFlag = code.substr(0, 2)
-        }else{
+        if(provinceFlag != code.substr(0,2)){
             if(isSpecial){
-                cities.counties.push({"code": code, "name": name})
-            }else{
-                if(cityFlag != code.substr(2,2)){
-                    if(Object.keys(cities).length != 0 ){
-                        if( code.substr(4,2) == "00"){
-                            provice["cities"].push(cities);
-                        }else{
-                            isSpecial = true;
-                            cities = {"code": provice.code, "name": provice.name, "counties": []}
-                            cities.counties.push({"code": code, "name": name})
-                        }
-                    }
-                    if( code.substr(4,2) == "00"){
-                        cities = {"code": code, "name": name, "counties": []}
-                        cityFlag = code.substr(2,2);
-                    }else{
-                        isSpecial = true;
-                        cities = {"code": provice.code, "name": provice.name, "counties": []}
-                        cities.counties.push({"code": code, "name": name})
-                    }
+                district[cityFlag + "00"] = curDistrict
+                curDistrict = []
+                isSpecial = false
+            }
+            if(Object.keys(provinces).length != 0){
+                if(curCities.length != 0){
+                    cities[provinceFlag + "0000"] = curCities
+                    curCities = []
                 }else{
-                    cities.counties.push({"code": code, "name": name})
+                    if(code != "710000" && code != "810000" && code != "820000")
+                    cities[provinceFlag + "0000"] = [{"code":provinces[provinces.length - 1].code, "name": provinces[provinces.length - 1].name}]
                 }
             }
+            provinces.push({"code": code, "name": name})
+            provinceFlag = code.substr(0, 2)
+        }else{
+            if(cityFlag != code.substr(0,4)){
+                if(Object.keys(cities).length != 0 ){
+                    if("00" == code.substr(4,2)){
+                        // 市
+                        if(typeof district[cityFlag + "00"] === 'undefined'){
+                            district[cityFlag + "00"] = curDistrict
+                            curDistrict = []
+                        }
+                        curCities.push({"code": code, "name": name})
+                    }else{
+                        isSpecial = true
+                        // 县
+                        curDistrict.push({"code": code, "name": name})
+                    }
+                }else{
+                    isSpecial = true
+                    // 初次 
+                    // 县
+                    curDistrict.push({"code": code, "name": name})
+                }
+            }else{
+                curDistrict.push({"code": code, "name": name})
+            }
+            cityFlag = code.substr(0, 4)
         }
     })
     
-    fs.writeFileSync(path.resolve(__dirname, "urbans.js"), `${JSON.stringify(urbanFormatArr)}`);
+    fs.writeFileSync(path.resolve(__dirname, "provinces.js"), `${JSON.stringify(provinces)}`);
+    fs.writeFileSync(path.resolve(__dirname, "cities.js"), `${JSON.stringify(cities)}`);
+    fs.writeFileSync(path.resolve(__dirname, "districts.js"), `${JSON.stringify(district)}`);
 
     spinner.succeed(chalk.green("结束了"));
 
     await browser.close();
 })();
+
+// 省市区
+
+(async () => {
+});
